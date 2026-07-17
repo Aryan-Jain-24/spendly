@@ -4,19 +4,73 @@
 
 {% block content %}
 
-<section class="auth-section">
-    <div class="auth-container">
+<section class="profile-section">
+    <div class="profile-container">
 
-        <div class="auth-header">
-            <h1 class="auth-title">Your profile</h1>
-            <p class="auth-subtitle">Account details for your Spendly account</p>
+        <div class="profile-header">
+            <div class="profile-avatar">{{ user.name[0]|upper }}</div>
+            <div>
+                <h1 class="profile-name">{{ user.name }}</h1>
+                <p class="profile-email">{{ user.email }}</p>
+                <p class="profile-meta">Member since {{ user.member_since }}</p>
+            </div>
         </div>
 
-        <div class="auth-card profile-card">
-            <div class="profile-avatar">{{ user.name[0]|upper }}</div>
-            <h2 class="profile-name">{{ user.name }}</h2>
-            <p class="profile-email">{{ user.email }}</p>
-            <p class="profile-meta">Member since {{ member_since }}</p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Total spent</span>
+                <span class="stat-value">₹{{ "%.2f"|format(summary.total_spent) }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Transactions</span>
+                <span class="stat-value">{{ summary.transaction_count }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Top category</span>
+                <span class="stat-value">{{ summary.top_category }}</span>
+            </div>
+        </div>
+
+        <div class="profile-panels">
+
+            <div class="panel">
+                <h2 class="panel-title">Recent transactions</h2>
+                {% if transactions %}
+                <div class="transaction-list">
+                    {% for txn in transactions %}
+                    <div class="transaction-row">
+                        <div class="transaction-info">
+                            <span class="transaction-desc">{{ txn.description or txn.category }}</span>
+                            <span class="transaction-meta">{{ txn.date }} · {{ txn.category }}</span>
+                        </div>
+                        <span class="transaction-amount">₹{{ "%.2f"|format(txn.amount) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No transactions yet.</p>
+                {% endif %}
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title">Category breakdown</h2>
+                {% if categories %}
+                <div class="breakdown-list">
+                    {% for cat in categories %}
+                    <div class="breakdown-row">
+                        <span class="breakdown-name">{{ cat.name }}</span>
+                        <div class="breakdown-bar-track">
+                            <div class="breakdown-bar" style="width: {{ cat.pct }}%"></div>
+                        </div>
+                        <span class="breakdown-pct">{{ cat.pct }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No expenses yet.</p>
+                {% endif %}
+            </div>
+
         </div>
 
     </div>

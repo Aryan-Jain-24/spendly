@@ -1,9 +1,13 @@
-from datetime import datetime
-
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from database.db import get_db, init_db, seed_db
+from database.queries import (
+    get_user_by_id,
+    get_summary_stats,
+    get_recent_transactions,
+    get_category_breakdown,
+)
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key-change-in-production"
@@ -107,22 +111,24 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
-    db = get_db()
-    user = db.execute(
-        "SELECT id, name, email, created_at FROM users WHERE id = ?",
-        (session["user_id"],),
-    ).fetchone()
-    db.close()
+    user_id = session["user_id"]
+    user = get_user_by_id(user_id)
 
     if user is None:
         session.pop("user_id", None)
         return redirect(url_for("login"))
 
-    member_since = datetime.strptime(
-        user["created_at"], "%Y-%m-%d %H:%M:%S"
-    ).strftime("%B %Y")
+    summary = get_summary_stats(user_id)
+    transactions = get_recent_transactions(user_id)
+    categories = get_category_breakdown(user_id)
 
-    return render_template("profile.html", user=user, member_since=member_since)
+    return render_template(
+        "profile.html",
+        user=user,
+        summary=summary,
+        transactions=transactions,
+        categories=categories,
+    )
 
 
 @app.route("/expenses/add")
