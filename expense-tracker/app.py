@@ -164,7 +164,16 @@ def profile():
         start=start,
         end=end,
         filter_error=filter_error,
+        active_page="profile",
     )
+
+
+@app.route("/analytics")
+def analytics():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    return render_template("analytics.html", active_page="analytics")
 
 
 @app.route("/expenses/add")
