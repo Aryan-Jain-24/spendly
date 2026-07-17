@@ -112,3 +112,16 @@ def get_category_breakdown(user_id, start_date=None, end_date=None):
         item["pct"] = pct
 
     return breakdown
+
+
+def create_expense(user_id, amount, category, date, description=None):
+    db = get_db()
+    cursor = db.execute(
+        "INSERT INTO expenses (user_id, amount, category, date, description) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (user_id, amount, category, date, description),
+    )
+    db.commit()
+    expense_id = cursor.lastrowid
+    db.close()
+    return expense_id
