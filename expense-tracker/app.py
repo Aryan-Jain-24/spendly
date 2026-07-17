@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -118,9 +120,34 @@ def profile():
         session.pop("user_id", None)
         return redirect(url_for("login"))
 
-    summary = get_summary_stats(user_id)
-    transactions = get_recent_transactions(user_id)
-    categories = get_category_breakdown(user_id)
+    def _is_valid_date(value):
+        try:
+            datetime.strptime(value, "%Y-%m-%d")
+            return True
+        except ValueError:
+            return False
+
+    raw_start = request.args.get("start", "").strip()
+    raw_end = request.args.get("end", "").strip()
+    start = raw_start or None
+    end = raw_end or None
+
+    filter_error = None
+    if start is not None and not _is_valid_date(start):
+        filter_error = "Start date must be in YYYY-MM-DD format."
+    elif end is not None and not _is_valid_date(end):
+        filter_error = "End date must be in YYYY-MM-DD format."
+    elif start is not None and end is not None and start > end:
+        filter_error = "Start date must be on or before end date."
+
+    if filter_error:
+        query_start, query_end = None, None
+    else:
+        query_start, query_end = start, end
+
+    summary = get_summary_stats(user_id, start_date=query_start, end_date=query_end)
+    transactions = get_recent_transactions(user_id, start_date=query_start, end_date=query_end)
+    categories = get_category_breakdown(user_id, start_date=query_start, end_date=query_end)
 
     return render_template(
         "profile.html",
@@ -128,6 +155,9 @@ def profile():
         summary=summary,
         transactions=transactions,
         categories=categories,
+        start=start,
+        end=end,
+        filter_error=filter_error,
     )
 
 
