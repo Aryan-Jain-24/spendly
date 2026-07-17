@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -106,6 +108,35 @@ def logout():
     return redirect(url_for("login"))
 
 
+def _parse_date_filter(args):
+    """Read/validate start & end from query args.
+
+    Returns (start, end, query_start, query_end, error) — start/end are the raw
+    sticky values for repopulating the form; query_start/query_end are what gets
+    passed to the DB (None, None on any validation error).
+    """
+    def is_valid(value):
+        try:
+            datetime.strptime(value, "%Y-%m-%d")
+            return True
+        except ValueError:
+            return False
+
+    start = args.get("start", "").strip() or None
+    end = args.get("end", "").strip() or None
+
+    error = None
+    if start and not is_valid(start):
+        error = "Start date must be in YYYY-MM-DD format."
+    elif end and not is_valid(end):
+        error = "End date must be in YYYY-MM-DD format."
+    elif start and end and start > end:
+        error = "Start date must be on or before end date."
+
+    query_start, query_end = (None, None) if error else (start, end)
+    return start, end, query_start, query_end, error
+
+
 @app.route("/profile")
 def profile():
     if not session.get("user_id"):
@@ -118,9 +149,11 @@ def profile():
         session.pop("user_id", None)
         return redirect(url_for("login"))
 
-    summary = get_summary_stats(user_id)
-    transactions = get_recent_transactions(user_id)
-    categories = get_category_breakdown(user_id)
+    start, end, query_start, query_end, filter_error = _parse_date_filter(request.args)
+
+    summary = get_summary_stats(user_id, start_date=query_start, end_date=query_end)
+    transactions = get_recent_transactions(user_id, start_date=query_start, end_date=query_end)
+    categories = get_category_breakdown(user_id, start_date=query_start, end_date=query_end)
 
     return render_template(
         "profile.html",
@@ -128,6 +161,9 @@ def profile():
         summary=summary,
         transactions=transactions,
         categories=categories,
+        start=start,
+        end=end,
+        filter_error=filter_error,
     )
 
 

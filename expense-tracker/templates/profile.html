@@ -16,6 +16,38 @@
             </div>
         </div>
 
+        {% if filter_error %}
+        <p class="auth-error">{{ filter_error }}</p>
+        {% endif %}
+
+        <form method="GET" action="{{ url_for('profile') }}" class="filter-form">
+            <div class="filter-fields">
+                <div class="form-group">
+                    <label for="start">From</label>
+                    <input type="date" id="start" name="start" class="form-input" value="{{ start or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="end">To</label>
+                    <input type="date" id="end" name="end" class="form-input" value="{{ end or '' }}">
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-primary">Apply</button>
+                    <a href="{{ url_for('profile') }}" class="btn-ghost">Clear</a>
+                </div>
+            </div>
+        </form>
+
+        {% set filter_active = not filter_error and (start or end) %}
+        {% if filter_active %}
+            {% if start and end %}
+                {% set filter_empty_message = "No expenses between " ~ start ~ " and " ~ end ~ "." %}
+            {% elif start %}
+                {% set filter_empty_message = "No expenses since " ~ start ~ "." %}
+            {% else %}
+                {% set filter_empty_message = "No expenses before " ~ end ~ "." %}
+            {% endif %}
+        {% endif %}
+
         <div class="stats-grid">
             <div class="stat-card">
                 <span class="stat-label">Total spent</span>
@@ -48,7 +80,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="empty-state">No transactions yet.</p>
+                <p class="empty-state">{{ filter_empty_message if filter_active else "No transactions yet." }}</p>
                 {% endif %}
             </div>
 
@@ -67,7 +99,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="empty-state">No expenses yet.</p>
+                <p class="empty-state">{{ filter_empty_message if filter_active else "No expenses yet." }}</p>
                 {% endif %}
             </div>
 
