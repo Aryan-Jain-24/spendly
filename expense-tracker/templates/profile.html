@@ -78,6 +78,9 @@
                         <div class="transaction-actions">
                             <span class="transaction-amount">₹{{ "%.2f"|format(txn.amount) }}</span>
                             <a href="{{ url_for('edit_expense', id=txn.id) }}" class="transaction-edit-link">Edit</a>
+                            <form method="POST" action="{{ url_for('delete_expense', id=txn.id) }}" class="transaction-delete-form">
+                                <button type="submit" class="transaction-delete-btn">Delete</button>
+                            </form>
                         </div>
                     </div>
                     {% endfor %}
