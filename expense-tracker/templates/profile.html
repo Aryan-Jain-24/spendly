@@ -75,7 +75,10 @@
                             <span class="transaction-desc">{{ txn.description or txn.category }}</span>
                             <span class="transaction-meta">{{ txn.date }} · {{ txn.category }}</span>
                         </div>
-                        <span class="transaction-amount">₹{{ "%.2f"|format(txn.amount) }}</span>
+                        <div class="transaction-actions">
+                            <span class="transaction-amount">₹{{ "%.2f"|format(txn.amount) }}</span>
+                            <a href="{{ url_for('edit_expense', id=txn.id) }}" class="transaction-edit-link">Edit</a>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
